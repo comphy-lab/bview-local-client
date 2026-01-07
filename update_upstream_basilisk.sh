@@ -20,11 +20,10 @@ for arg in "$@"; do
             echo "Usage: ./update_upstream_basilisk.sh [OPTIONS]"
             echo ""
             echo "Options:"
-            echo "  --mode=N    Installation mode (1-4, default=1)"
+            echo "  --mode=N    Installation mode (1-3, default=1)"
             echo "              1) darcs clone + GitHub patches"
             echo "              2) wget tarball + GitHub patches"
             echo "              3) git clone from comphy-lab fork"
-            echo "              4) darcs clone + local patches"
             echo "  --help      Show this help message"
             exit 0
             ;;
