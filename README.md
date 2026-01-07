@@ -1,33 +1,67 @@
-# bview.comphy-lab.client
+# Basilisk View Local Client
 
-A self-contained, offline-capable local server for the Basilisk View client. This repository provides the same UI as `http://basilisk.ida.upmc.fr/three.js/editor/index.html` but runs entirely on your machine without requiring internet access.
+A self-contained, offline-capable local server for the [Basilisk View](http://basilisk.fr/src/jview/README) 3D visualization interface.
 
-## Purpose
+## Why Use a Local Client?
 
-- Run the Basilisk View client locally without internet
-- Serve the client from `http://localhost:<port>/three.js/editor/index.html`
-- Works with `bview2D restart --local`
-- No external downloads required at runtime
+When running Basilisk simulations with `bview2D`, you need a JavaScript client to visualize the 3D output. By default, `bview2D` connects to the remote client at `basilisk.ida.upmc.fr`. This local client provides an alternative that:
 
-## Quick Start
+- **Works offline** - No internet required after cloning
+- **Faster loading** - Assets served locally, no network latency
+- **Always available** - Independent of remote server uptime
+- **Consistent version** - Pinned to three.js r124, matching Basilisk's requirements
+
+## Installation
 
 ```bash
-# Start the local server (default port 8000)
-./deploy.sh
+git clone https://github.com/comphy-lab/bview-local-client.git
+cd bview-local-client
+```
 
-# Use with bview2D
+## Usage
+
+### Start the Local Server
+
+```bash
+./deploy.sh
+```
+
+This starts a local HTTP server and displays the URL:
+```
+Starting Basilisk View local client...
+
+  URL: http://localhost:8000/three.js/editor/index.html
+
+Press Ctrl+C to stop the server.
+```
+
+### Connect Your Simulation
+
+In a separate terminal, run your Basilisk simulation with `--local`:
+
+```bash
 bview2D restart --local
 ```
 
-## Custom Port
+The simulation will connect to your local client instead of the remote server.
+
+### Custom Port
+
+If port 8000 is in use, specify a different port:
 
 ```bash
-# Start on a specific port
 ./deploy.sh 8012
-
-# Use with bview2D on custom port
 bview2D restart --local=8012
 ```
+
+### Help
+
+```bash
+./deploy.sh --help
+```
+
+> **Note: Network Access**
+> The server binds to all interfaces, so you can access it from other devices on the same network using your machine's IP address (e.g., `http://192.168.1.100:8000/three.js/editor/index.html`). This also works over Tailscale or other VPN networks using the appropriate IP.
 
 ## Repository Structure
 

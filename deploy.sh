@@ -35,13 +35,43 @@ if ! [[ "$PORT" =~ ^[0-9]+$ ]]; then
     exit 1
 fi
 
-# Check if port is in use
+# Check if a tool is available
+check_tool() {
+    command -v "$1" > /dev/null 2>&1
+}
+
+# Check if port is in use (with fallbacks for minimal environments)
 check_port() {
     local port="$1"
-    if lsof -i :"$port" >/dev/null 2>&1; then
-        return 1  # Port is in use
+
+    # Try lsof first (macOS, most Linux)
+    if check_tool lsof; then
+        if lsof -i :"$port" >/dev/null 2>&1; then
+            return 1  # Port is in use
+        fi
+        return 0  # Port is free
     fi
-    return 0  # Port is free
+
+    # Fallback: ss (modern Linux)
+    if check_tool ss; then
+        if ss -tuln 2>/dev/null | grep -q ":$port "; then
+            return 1
+        fi
+        return 0
+    fi
+
+    # Fallback: netstat (older systems)
+    if check_tool netstat; then
+        if netstat -tuln 2>/dev/null | grep -q ":$port "; then
+            return 1
+        fi
+        return 0
+    fi
+
+    # No port-checking tool available - warn and assume free
+    echo "Warning: No port-checking tool found (lsof, ss, netstat)."
+    echo "Cannot verify if port $port is available."
+    return 0
 }
 
 # Find next available port
