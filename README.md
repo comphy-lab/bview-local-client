@@ -33,15 +33,27 @@ bview2D restart --local=8012
 
 ```
 bview.comphy-lab.client/
-  three.js/        # Full three.js r124 tree with Basilisk editor overlay
+  three.js/                      # Full three.js r124 tree with Basilisk editor overlay
     build/
-    editor/        # Basilisk's modified editor
+    editor/                      # Basilisk's modified editor
     examples/
     files/
     ...
-  deploy.sh        # Start local server
-  README.md        # This file
+  deploy.sh                      # Start local server
+  update_upstream_basilisk.sh    # Sync with upstream Basilisk
+  README.md                      # This file
+  basilisk/                      # (gitignored) Local Basilisk clone for updates
 ```
+
+## Updating from Upstream
+
+When Basilisk upstream updates their editor:
+
+```bash
+./update_upstream_basilisk.sh
+```
+
+This fetches fresh Basilisk and syncs the editor files to `three.js/editor/`.
 
 ## Requirements
 
