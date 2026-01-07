@@ -27,7 +27,7 @@ cd bview-local-client
 ```
 
 This starts a local HTTP server and displays the URL:
-```
+```bash
 Starting Basilisk View local client...
 
   URL: http://localhost:8000/three.js/editor/index.html
@@ -61,12 +61,12 @@ bview2D restart --local=8012
 ```
 
 > **Note: Network Access**
-> The server binds to all interfaces, so you can access it from other devices on the same network using your machine's IP address (e.g., `http://192.168.1.100:8000/three.js/editor/index.html`). This also works over Tailscale or other VPN networks using the appropriate IP.
+> The server binds to all interfaces, so you can access it from other devices on the same network using your machine's IP address (e.g., `http://192.168.1.100:8000/three.js/editor/index.html`). This also works over Tailscale or other VPNs using the appropriate IP.
 
 ## Repository Structure
 
-```
-bview.comphy-lab.client/
+```text
+bview-local-client/
   three.js/                      # Full three.js r124 tree with Basilisk editor overlay
     build/
     editor/                      # Basilisk's modified editor
