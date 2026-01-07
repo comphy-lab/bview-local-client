@@ -7,6 +7,30 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
+# Default mode
+MODE="1"
+
+# Parse arguments
+for arg in "$@"; do
+    case "$arg" in
+        --mode=*)
+            MODE="${arg#*=}"
+            ;;
+        --help|-h)
+            echo "Usage: ./update_upstream_basilisk.sh [OPTIONS]"
+            echo ""
+            echo "Options:"
+            echo "  --mode=N    Installation mode (1-4, default=1)"
+            echo "              1) darcs clone + GitHub patches"
+            echo "              2) wget tarball + GitHub patches"
+            echo "              3) git clone from comphy-lab fork"
+            echo "              4) darcs clone + local patches"
+            echo "  --help      Show this help message"
+            exit 0
+            ;;
+    esac
+done
+
 print_green() {
     printf "\033[0;32m%s\033[0m\n" "$1"
 }
@@ -20,9 +44,9 @@ print_red() {
 }
 
 # Step 1: Fresh basilisk install
-print_cyan "Step 1: Fetching fresh Basilisk from upstream..."
+print_cyan "Step 1: Fetching fresh Basilisk from upstream (mode=$MODE)..."
 if [[ -f "$SCRIPT_DIR/reset_install_requirements.sh" ]]; then
-    ./reset_install_requirements.sh --hard --mode=1
+    ./reset_install_requirements.sh --hard --mode="$MODE"
 else
     print_red "Error: reset_install_requirements.sh not found"
     print_cyan "Manual alternative: darcs clone https://basilisk.fr/basilisk basilisk"

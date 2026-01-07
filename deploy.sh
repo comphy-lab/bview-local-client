@@ -5,7 +5,35 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PORT="${1:-8000}"
+
+# Parse arguments
+PORT="8000"
+for arg in "$@"; do
+    case "$arg" in
+        --help|-h)
+            echo "Usage: ./deploy.sh [PORT]"
+            echo ""
+            echo "Start the Basilisk View local client server."
+            echo ""
+            echo "Arguments:"
+            echo "  PORT    Port number to serve on (default: 8000)"
+            echo ""
+            echo "Examples:"
+            echo "  ./deploy.sh          # Serve on port 8000"
+            echo "  ./deploy.sh 8012     # Serve on port 8012"
+            exit 0
+            ;;
+        *)
+            PORT="$arg"
+            ;;
+    esac
+done
+
+# Validate port is a number
+if ! [[ "$PORT" =~ ^[0-9]+$ ]]; then
+    echo "Error: Invalid port '$PORT'. Port must be a number."
+    exit 1
+fi
 
 # Check if port is in use
 check_port() {
