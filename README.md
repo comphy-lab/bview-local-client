@@ -37,13 +37,49 @@ Press Ctrl+C to stop the server.
 
 ### Connect Your Simulation
 
-In a separate terminal, run your Basilisk simulation with `--local`:
+#### Option A: Manual URL (Quick Setup)
+
+Run your Basilisk simulation normally:
 
 ```bash
-bview2D restart --local
+bview2D FILE
 ```
 
-The simulation will connect to your local client instead of the remote server.
+This prints a URL pointing to the remote server:
+```
+http://basilisk.ida.upmc.fr/three.js/editor/index.html?ws://your-hostname:7101
+```
+
+Ignore the `basilisk.ida.upmc.fr` host and use your localhost instead. Bookmark the local URL:
+```
+http://localhost:8000/three.js/editor/index.html
+```
+
+Then append the websocket query string (`?ws://...`) from the `bview2D` output:
+```
+http://localhost:8000/three.js/editor/index.html?ws://your-hostname:7101
+```
+
+> **Tip:** Bookmark `http://localhost:8000/three.js/editor/index.html` and just paste the `?ws://...` part from each `bview2D` run.
+
+#### Option B: Automatic URL (Requires Basilisk Recompile)
+
+If you compile Basilisk using the [comphy-lab installer](https://github.com/comphy-lab/basilisk-C) with the `--local-bview` flag:
+
+```bash
+./reset_install_requirements.sh --hard --local-bview
+```
+
+Then `bview2D` with `--local` outputs the correct localhost URL directly:
+
+```bash
+bview2D FILE --local
+```
+
+Output:
+```
+http://localhost:8000/three.js/editor/index.html?ws://your-hostname:7101
+```
 
 ### Custom Port
 
@@ -51,7 +87,11 @@ If port 8000 is in use, specify a different port:
 
 ```bash
 ./deploy.sh 8012
-bview2D restart --local=8012
+```
+
+For Option B users:
+```bash
+bview2D FILE --local=8012
 ```
 
 ### Help
