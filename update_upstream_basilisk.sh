@@ -1,34 +1,14 @@
 #!/bin/bash
 # Update Basilisk View client from upstream Basilisk
-# This script fetches the latest Basilisk editor and syncs it to three.js/editor/
+# This script fetches the version-locked Basilisk editor and syncs it to three.js/editor/
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Default mode
-MODE="1"
-
-# Parse arguments
-for arg in "$@"; do
-    case "$arg" in
-        --mode=*)
-            MODE="${arg#*=}"
-            ;;
-        --help|-h)
-            echo "Usage: ./update_upstream_basilisk.sh [OPTIONS]"
-            echo ""
-            echo "Options:"
-            echo "  --mode=N    Installation mode (1-3, default=1)"
-            echo "              1) darcs clone + GitHub patches"
-            echo "              2) wget tarball + GitHub patches"
-            echo "              3) git clone from comphy-lab fork"
-            echo "  --help      Show this help message"
-            exit 0
-            ;;
-    esac
-done
+# Version-locked Basilisk reference
+BASILISK_REF="v2026-01-13"
 
 print_green() {
     printf "\033[0;32m%s\033[0m\n" "$1"
@@ -42,15 +22,9 @@ print_red() {
     printf "\033[0;31m%s\033[0m\n" "$1"
 }
 
-# Step 1: Fresh basilisk install
-print_cyan "Step 1: Fetching fresh Basilisk from upstream (mode=$MODE)..."
-if [[ -f "$SCRIPT_DIR/reset_install_requirements.sh" ]]; then
-    ./reset_install_requirements.sh --hard --mode="$MODE"
-else
-    print_red "Error: reset_install_requirements.sh not found"
-    print_cyan "Manual alternative: darcs clone https://basilisk.fr/basilisk basilisk"
-    exit 1
-fi
+# Step 1: Fresh basilisk install using version-locked reference
+print_cyan "Step 1: Fetching Basilisk ($BASILISK_REF) from comphy-lab/basilisk-C..."
+curl -sL https://raw.githubusercontent.com/comphy-lab/basilisk-C/main/reset_install_basilisk-ref-locked.sh | bash -s -- --ref="$BASILISK_REF" --hard
 
 # Verify basilisk directory exists after install
 if [[ ! -d "$SCRIPT_DIR/basilisk/src/jview/three.js/editor" ]]; then
@@ -58,17 +32,26 @@ if [[ ! -d "$SCRIPT_DIR/basilisk/src/jview/three.js/editor" ]]; then
     exit 1
 fi
 
-# Step 2: Re-apply overlay
+# Step 2: Sync Basilisk editor overlay
 print_cyan "Step 2: Syncing Basilisk editor to three.js/editor/..."
 rsync -a "$SCRIPT_DIR/basilisk/src/jview/three.js/editor/" "$SCRIPT_DIR/three.js/editor/"
 
 print_green "Sync complete!"
 echo ""
 
-# Step 3: Show what changed
-print_cyan "Step 3: Changes in three.js/editor/:"
+# Step 3: Re-apply local patches (CSS customizations, etc.)
+if [[ -f "$SCRIPT_DIR/apply_local_patches.sh" ]]; then
+    print_cyan "Step 3: Re-applying local patches..."
+    "$SCRIPT_DIR/apply_local_patches.sh"
+else
+    print_cyan "Step 3: No local patches script found. Skipping."
+fi
+echo ""
+
+# Step 4: Show what changed
+print_cyan "Step 4: Changes in three.js/editor/:"
 git status three.js/editor/ 2>/dev/null || echo "(Not a git repository)"
 echo ""
 print_cyan "To commit these changes:"
 echo "  git add three.js/editor"
-echo "  git commit -m 'Sync with upstream Basilisk editor'"
+echo "  git commit -m 'Sync with upstream Basilisk editor ($BASILISK_REF)'"
