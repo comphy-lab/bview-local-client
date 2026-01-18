@@ -1,5 +1,11 @@
 :root {
-	color-scheme: light dark;
+	color-scheme: light;
+	--app-bg: #808080;
+	--ui-bg: #333333;
+	--ui-bg-alt: #3a3a3a;
+	--ui-border: #444444;
+	--ui-text: #e0e0e0;
+	--ui-text-muted: #c2c2c2;
 }
 
 body {
@@ -7,6 +13,7 @@ body {
 	font-size: 14px;
 	margin: 0;
 	overflow: hidden;
+	background-color: var(--app-bg);
 }
 
 hr {
@@ -91,8 +98,8 @@ textarea, input { outline: none; } /* osx */
 
 /* Listbox */
 .Listbox {
-	color: #444;
-	background-color: #fff;
+	color: var(--ui-text);
+	background-color: var(--ui-bg);
 	padding: 0;
 	width: 100%;
 	min-height: 140px;
@@ -103,12 +110,12 @@ textarea, input { outline: none; } /* osx */
 
 .Listbox .ListboxItem {
 	padding: 6px;
-	color: #666;
+	color: var(--ui-text);
 	white-space: nowrap;
 }
 
 .Listbox .ListboxItem.active {
-	background-color: rgba(0, 0, 0, 0.04);
+	background-color: rgba(255, 255, 255, 0.08);
 }
 
 /* CodeMirror */
@@ -335,7 +342,7 @@ select {
 	position: absolute;
 	width: 100%;
 	height: 32px;
-	background: #eee;
+	background: var(--ui-bg);
 	padding: 0;
 	margin: 0;
 	right: 0;
@@ -357,7 +364,7 @@ select {
 
 		#menubar .menu .title {
 			display: inline-block;
-			color: #888;
+			color: var(--ui-text);
 			margin: 0;
 			padding: 8px;
 			line-height: 16px;
@@ -367,7 +374,7 @@ select {
 			position: fixed;
 			display: none;
 			padding: 5px 0;
-			background: #eee;
+			background: var(--ui-bg);
 			width: 150px;
 			max-height: calc(100% - 80px);
 			overflow: auto;
@@ -378,11 +385,11 @@ select {
 		}
 
 			#menubar .menu .options hr {
-				border-color: #ddd;
+				border-color: var(--ui-border);
 			}
 
 			#menubar .menu .options .option {
-				color: #666;
+				color: var(--ui-text);
 				background-color: transparent;
 				padding: 5px 10px;
 				margin: 0 !important;
@@ -399,7 +406,7 @@ select {
 				}
 
 		#menubar .menu .options .inactive {
-			color: #bbb;
+			color: #bcbcbc;
 			background-color: transparent;
 			padding: 5px 10px;
 			margin: 0 !important;
@@ -411,14 +418,14 @@ select {
 	top: 32px;
 	bottom: 0;
 	width: 300px;
-	background: #eee;
+	background: var(--ui-bg);
 	overflow: auto;
 }
 
 	#sidebar .Panel {
-		color: #888;
+		color: var(--ui-text);
 		padding: 10px;
-		border-top: 1px solid #ccc;
+		border-top: 1px solid var(--ui-border);
 	}
 
 	#sidebar .Panel.collapsed {
@@ -435,19 +442,19 @@ select {
 	}
 
 #tabs {
-	background-color: #ddd;
-	border-top: 1px solid #ccc;
+	background-color: var(--ui-bg);
+	border-top: 1px solid var(--ui-border);
 }
 
 	#tabs span {
-		color: #aaa;
-		border-right: 1px solid #ccc;
+		color: var(--ui-text-muted);
+		border-right: 1px solid var(--ui-border);
 		padding: 10px;
 	}
 
 	#tabs span.selected {
-		color: #888;
-		background-color: #eee;
+		color: var(--ui-text);
+		background-color: var(--ui-bg-alt);
 	}
 
 #toolbar {
@@ -455,7 +462,7 @@ select {
 	left: 10px;
 	top: 42px;
 	width: 32px;
-	background: #eee;
+	background: var(--ui-bg);
 	text-align: center;
 }
 
@@ -469,8 +476,8 @@ select {
 		}
 
 .Outliner {
-	color: #444;
-	background-color: #fff;
+	color: var(--ui-text);
+	background-color: var(--ui-bg);
 	padding: 0;
 	width: 100%;
 	height: 140px;
@@ -483,41 +490,41 @@ select {
 
 	.Outliner .option {
 		padding: 4px;
-		color: #666;
+		color: var(--ui-text);
 		white-space: nowrap;
 	}
 
 	.Outliner .option:hover {
-		background-color: rgba(0,0,0,0.02);
+		background-color: rgba(255, 255, 255, 0.06);
 	}
 
 	.Outliner .option.active {
-		background-color: rgba(0,0,0,0.04);
+		background-color: rgba(255, 255, 255, 0.1);
 	}
 
 
 .TabbedPanel .Tabs {
-	background-color: #ddd;
-	border-top: 1px solid #ccc;
+	background-color: var(--ui-bg);
+	border-top: 1px solid var(--ui-border);
 }
 
 	.TabbedPanel .Tab {
-		color: #aaa;
-		border-right: 1px solid #ccc;
+		color: var(--ui-text-muted);
+		border-right: 1px solid var(--ui-border);
 	}
 
 	.TabbedPanel .Tab.selected {
-		color: #888;
-		background-color: #eee;
+		color: var(--ui-text);
+		background-color: var(--ui-bg-alt);
 	}
 
 .Listbox {
-	color: #444;
-	background-color: #fff;
+	color: var(--ui-text);
+	background-color: var(--ui-bg);
 }
 
 .Panel {
-	color: #888;
+	color: var(--ui-text);
 }
 
 /* */
@@ -566,136 +573,4 @@ select {
 
 }
 
-/* DARK MODE */
-
-@media ( prefers-color-scheme: dark ) {
-
-	button {
-		color: #aaa;
-		background-color: #222;
-	}
-
-		button:hover {
-			color: #ccc;
-			background-color: #444;
-		}
-
-		button.selected {
-			color: #fff;
-			background-color: #08f;
-		}
-
-	input, textarea {
-		background-color: #222;
-		border: 1px solid transparent;
-		color: #888;
-	}
-
-	select {
-		color: #aaa;
-		background-color: #222;
-	}
-
-		select:hover {
-			color: #ccc;
-			background-color: #444;
-		}
-
-	/* UI */
-
-	#menubar {
-		background: #111;
-	}
-
-			#menubar .menu .options {
-				background: #111;
-			}
-
-				#menubar .menu .options hr {
-					border-color: #222;
-				}
-
-				#menubar .menu .options .option {
-					color: #888;
-				}
-
-			#menubar .menu .options .inactive {
-				color: #444;
-			}
-
-	#sidebar {
-		background-color: #111;
-	}
-
-		#sidebar .Panel {
-			border-top: 1px solid #222;
-		}
-
-		#sidebar .Panel.Material canvas {
-			border: solid 1px #5A5A5A;
-		}
-
-	#tabs {
-		background-color: #1b1b1b;
-		border-top: 1px solid #222;
-	}
-
-		#tabs span {
-			color: #555;
-			border-right: 1px solid #222;
-		}
-
-		#tabs span.selected {
-			background-color: #111;
-		}
-
-	#toolbar {
-		background-color: #111;
-	}
-
-		#toolbar img {
-			filter: invert(1);
-		}
-
-	.Outliner {
-		color: #888;
-		background: #222;
-	}
-
-		.Outliner .option:hover {
-			background-color: rgba(21,60,94,0.5);
-		}
-
-		.Outliner .option.active {
-			background-color: rgba(21,60,94,1);
-		}
-
-	.TabbedPanel .Tabs {
-		background-color: #1b1b1b;
-		border-top: 1px solid #222;
-	}
-
-		.TabbedPanel .Tab {
-			color: #555;
-			border-right: 1px solid #222;
-		}
-
-		.TabbedPanel .Tab.selected {
-			color: #888;
-			background-color: #111;
-		}
-
-	.Listbox {
-		color: #888;
-		background: #222;
-	}
-
-	.Listbox .ListboxItem:hover {
-		background-color: rgba(21,60,94,0.5);
-	}
-
-	.Listbox .ListboxItem.active {
-		background-color: rgba(21,60,94,1);
-	}
-
-}
+/* Dark mode overrides removed to force a light theme. */

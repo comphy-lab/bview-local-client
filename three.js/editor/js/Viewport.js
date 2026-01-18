@@ -16,20 +16,23 @@ import { SetScaleCommand } from './commands/SetScaleCommand.js';
 
 function Viewport( editor ) {
 
-	var signals = editor.signals;
+var signals = editor.signals;
 
-	var container = new UIPanel();
-	container.setId( 'viewport' );
-	container.setPosition( 'absolute' );
+var container = new UIPanel();
+container.setId( 'viewport' );
+container.setPosition( 'absolute' );
 
-	container.add( new ViewportCamera( editor ) );
-	container.add( new ViewportInfo( editor ) );
+container.add( new ViewportCamera( editor ) );
+container.add( new ViewportInfo( editor ) );
 
-	//
+//
 
-	var renderer = null;
-	var pmremGenerator = null;
-	var pmremTexture = null;
+var VIEWPORT_CLEAR_COLOR = 0x808080;
+var VIEWPORT_GRID_COLORS = [ 0x282828, 0x888888 ];
+
+var renderer = null;
+var pmremGenerator = null;
+var pmremTexture = null;
 
 	var camera = editor.camera;
 	var scene = editor.scene;
@@ -38,10 +41,10 @@ function Viewport( editor ) {
 
 	var objects = [];
 
-	// helpers
+// helpers
 
-	var grid = new THREE.GridHelper( 30, 30, 0x444444, 0x888888 );
-	var viewHelper = new ViewHelper( camera, container );
+var grid = new THREE.GridHelper( 30, 30, VIEWPORT_GRID_COLORS[ 0 ], VIEWPORT_GRID_COLORS[ 1 ] );
+var viewHelper = new ViewHelper( camera, container );
 
 	//
 
@@ -355,24 +358,8 @@ function Viewport( editor ) {
 
 		renderer = newRenderer;
 
-		renderer.setClearColor( 0xaaaaaa );
-
-		if ( window.matchMedia ) {
-
-			var mediaQuery = window.matchMedia( '(prefers-color-scheme: dark)' );
-			mediaQuery.addListener( function ( event ) {
-
-				renderer.setClearColor( event.matches ? 0x333333 : 0xaaaaaa );
-				updateGridColors( grid, event.matches ? [ 0x888888, 0x222222 ] : [ 0x282828, 0x888888 ] );
-
-				render();
-
-			} );
-
-			renderer.setClearColor( mediaQuery.matches ? 0x333333 : 0xaaaaaa );
-			updateGridColors( grid, mediaQuery.matches ? [ 0x888888, 0x222222 ] : [ 0x282828, 0x888888 ] );
-
-		}
+		renderer.setClearColor( VIEWPORT_CLEAR_COLOR );
+		updateGridColors( grid, VIEWPORT_GRID_COLORS );
 
 		renderer.setPixelRatio( window.devicePixelRatio );
 		renderer.setSize( container.dom.offsetWidth, container.dom.offsetHeight );
