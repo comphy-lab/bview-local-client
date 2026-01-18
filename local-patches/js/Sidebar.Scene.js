@@ -494,7 +494,7 @@ function SidebarScene( editor ) {
 			let needsRefresh = false;
 			let parent = object.parent;
 
-			while ( parent !== editor.scene ) {
+			while ( parent && parent !== editor.scene ) {
 
 				if ( nodeStates.get( parent ) !== true ) {
 
