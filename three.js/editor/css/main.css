@@ -6,6 +6,7 @@
 	--ui-border: #444444;
 	--ui-text: #e0e0e0;
 	--ui-text-muted: #c2c2c2;
+	--ui-text-inactive: #bcbcbc;
 }
 
 body {
@@ -406,7 +407,7 @@ select {
 				}
 
 		#menubar .menu .options .inactive {
-			color: #bcbcbc;
+			color: var(--ui-text-inactive);
 			background-color: transparent;
 			padding: 5px 10px;
 			margin: 0 !important;
@@ -573,4 +574,4 @@ select {
 
 }
 
-/* Dark mode overrides removed to force a light theme. */
+/* Dark mode overrides removed to force a consistent gray theme. */
