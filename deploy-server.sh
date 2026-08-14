@@ -39,17 +39,36 @@ print_red()   { printf "\033[0;31m%s\033[0m\n" "$1"; }
 print_yellow(){ printf "\033[0;33m%s\033[0m\n" "$1"; }
 
 # systemd reporting the unit as active does not prove the new tree is being
-# served -- the process can be up while the document root is wrong. Poll the
-# editor entry point before discarding the rollback copy. Unset
-# BVIEW_HEALTH_URL to skip the check.
+# served: the process can be up while the document root points somewhere else.
+# Set BVIEW_HEALTH_URL to an empty string to skip the check entirely; leaving it
+# unset uses the default below.
 HEALTH_URL="${BVIEW_HEALTH_URL-http://127.0.0.1:8000/three.js/editor/index.html}"
+
 deployment_is_serving() {
     [[ -z "$HEALTH_URL" ]] && return 0
-    command -v curl >/dev/null 2>&1 || return 0
-    local code attempts=10
+
+    if ! command -v curl >/dev/null 2>&1; then
+        print_red "Health check requested but curl is unavailable."
+        print_red "Install curl, or set BVIEW_HEALTH_URL='' to skip the check deliberately."
+        return 1
+    fi
+
+    # A 200 alone does not prove the response came from $DEPLOY_DIR. The tree
+    # carries .deployed-ref, so fetch it from the same origin and require it to
+    # match the commit just deployed.
+    local ref_url="${HEALTH_URL%/three.js/*}/.deployed-ref"
+    local code served attempts=10
     while (( attempts-- > 0 )); do
         code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 "$HEALTH_URL" 2>/dev/null || echo 000)"
-        [[ "$code" == "200" ]] && return 0
+        if [[ "$code" == "200" ]]; then
+            served="$(curl -s --max-time 3 "$ref_url" 2>/dev/null | tr -d '[:space:]' || true)"
+            if [[ "$served" == "$COMMIT" ]]; then
+                return 0
+            fi
+            print_red "Served tree reports commit '${served:-<none>}', expected '$COMMIT'."
+            print_red "The unit is probably serving a different directory than $DEPLOY_DIR."
+            return 1
+        fi
         sleep 1
     done
     print_red "Health check failed: $HEALTH_URL returned $code"
@@ -122,23 +141,30 @@ fi
 # served: the running server keeps using the old directory until the rename.
 STAGING="${DEPLOY_DIR}.new"
 PREVIOUS="${DEPLOY_DIR}.old"
-LOCKFILE="${DEPLOY_DIR}.lock"
+LOCKDIR="${DEPLOY_DIR}.lock"
 
 # $STAGING and $PREVIOUS are fixed paths, so two concurrent deployments would
-# move and delete each other's trees and destroy the rollback copy. Hold an
-# exclusive lock for the rest of the run.
-if command -v flock >/dev/null 2>&1; then
-    mkdir -p "$(dirname "$LOCKFILE")"
-    exec 9>"$LOCKFILE"
-    if ! flock -n 9; then
-        print_red "Error: another deployment is in progress (lock: $LOCKFILE)."
+# move and delete each other's trees and destroy the rollback copy. mkdir is
+# atomic on every POSIX filesystem, so this needs no external tool and there is
+# no path where the lock is merely advisory.
+mkdir -p "$(dirname "$LOCKDIR")"
+if ! mkdir "$LOCKDIR" 2>/dev/null; then
+    holder="$(cat "$LOCKDIR/pid" 2>/dev/null || true)"
+    if [[ -n "$holder" ]] && kill -0 "$holder" 2>/dev/null; then
+        print_red "Error: deployment already in progress (pid $holder, lock $LOCKDIR)."
         exit 1
     fi
-else
-    print_yellow "Warning: flock unavailable; concurrent deployments are not prevented."
+    print_yellow "Stale lock from pid ${holder:-unknown}; taking over."
+    rm -rf "$LOCKDIR"
+    if ! mkdir "$LOCKDIR" 2>/dev/null; then
+        print_red "Error: could not acquire $LOCKDIR."
+        exit 1
+    fi
 fi
+echo "$$" > "$LOCKDIR/pid"
+release_lock() { rm -rf "$LOCKDIR"; }
 
-cleanup_staging() { rm -rf "$STAGING"; }
+cleanup_staging() { rm -rf "$STAGING"; release_lock; }
 trap cleanup_staging EXIT
 
 print_cyan "Exporting tracked tree (git archive)..."
@@ -169,7 +195,7 @@ print_cyan "Swapping into place..."
 rm -rf "$PREVIOUS"
 [[ -d "$DEPLOY_DIR" ]] && mv "$DEPLOY_DIR" "$PREVIOUS"
 mv "$STAGING" "$DEPLOY_DIR"
-trap - EXIT
+trap release_lock EXIT
 
 # The previous tree is deliberately retained until the service is confirmed
 # healthy, so a failed restart leaves something to roll back to.
