@@ -67,14 +67,23 @@ suffix your solver prints.
 with per-device identity is the least effort for the most safety. Publish the
 static client over HTTPS, and the solver port as a *TLS-terminated TCP forward*.
 
-> **The static client and the solver port need different treatment.** An HTTP
-> reverse proxy works for the client, because that is a real HTTP server. It
-> does **not** work for the solver: Basilisk's `wsServer` is a raw socket
-> handler that speaks only enough HTTP to complete a WebSocket handshake, so an
-> HTTP-aware proxy rejects it before the upgrade and returns **502**. Forward
-> raw TCP with TLS terminated in front of it instead.
+> **The static client and the solver port need different treatment.** Plain
+> HTTP proxying is fine for the client, because that is a real HTTP server.
+> The solver is not: Basilisk's `wsServer` is a raw socket handler that speaks
+> only enough HTTP to complete a WebSocket handshake.
 >
-> If you see a 502 on the WebSocket but the client itself loads, this is why.
+> An HTTP reverse proxy therefore has to be configured explicitly for
+> WebSocket upgrades — with nginx that means `proxy_http_version 1.1` plus the
+> `Upgrade` and `Connection` headers. A proxy's simple path-forwarding mode is
+> generally *not* enough: forwarding the solver port through
+> `tailscale serve --set-path=...` returns **502**, because that mode's HTTP
+> handling rejects `wsServer` before the upgrade completes.
+>
+> Forwarding raw TCP with TLS terminated in front of it sidesteps the question
+> entirely and is the simpler option if your proxy supports it — for example
+> `tailscale serve --tls-terminated-tcp=<port>`.
+>
+> If the client loads but the WebSocket returns 502, this is why.
 
 **Over the public internet.** Don't, without an authenticating proxy in front of
 both. See the security note below.
@@ -136,7 +145,7 @@ local styling survives an upstream update.
 | Symptom | Cause |
 |---|---|
 | Blank page | Server root is not the repository root. The editor reaches up into `../build/` and `../../examples/jsm/`. |
-| Client loads, WebSocket 502 | An HTTP proxy is in front of the solver port. Use TLS-terminated raw TCP. |
+| Client loads, WebSocket 502 | The proxy in front of the solver port is not configured for WebSocket upgrades. Enable them, or forward raw TCP with TLS terminated in front. |
 | Client loads, nothing renders | No solver on the `?ws://` endpoint, or the wrong port — bview picks its own from `DISPLAY_RANGE`. |
 | Printed URL has an unreachable host | `display_url()` uses `gethostbyname()`, which often returns something unroutable. Replace the host; keep the port. |
 | Long stall after each sidebar change | Older clients serialised every vertex attribute on autosave. Update, or untick autosave. |
