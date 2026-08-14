@@ -7,6 +7,8 @@
 	--ui-text: #e0e0e0;
 	--ui-text-muted: #c2c2c2;
 	--ui-text-inactive: #bcbcbc;
+	--ui-input-bg: #2b2b2b;
+	--ui-focus: #4a90d9;
 }
 
 body {
@@ -265,17 +267,35 @@ button {
 }
 
 	button:hover {
-		background-color: #fff;
+		background-color: var(--ui-border);
 	}
 
 	button.selected {
-		background-color: #fff;
+		background-color: var(--ui-focus);
 	}
 
 input, textarea {
-	border: 1px solid transparent;
-	color: #444;
+	border: 1px solid var(--ui-border);
+	color: var(--ui-text);
+	background-color: var(--ui-input-bg);
 }
+
+	input::placeholder, textarea::placeholder {
+		color: var(--ui-text-muted);
+		opacity: 1;			/* Firefox dims placeholders by default */
+	}
+
+	input:disabled, input[readonly], textarea:disabled, textarea[readonly] {
+		/* Readonly fields still have to be legible: `c`, `Name` and `UUID`
+		   are read-only and were rendering near-invisibly. */
+		color: var(--ui-text-muted);
+		background-color: var(--ui-bg);
+	}
+
+	input:focus, textarea:focus {
+		border-color: var(--ui-focus);
+		outline: none;
+	}
 
 input.Number {
 	color: #08f!important;
@@ -285,8 +305,8 @@ input.Number {
 }
 
 select {
-	color: #666;
-	background-color: #ddd;
+	color: var(--ui-text);
+	background-color: var(--ui-bg-alt);
 	border: 0px;
 	text-transform: uppercase;
 	cursor: pointer;
@@ -294,7 +314,7 @@ select {
 }
 
 	select:hover {
-		background-color: #fff;
+		background-color: var(--ui-border);
 	}
 
 /* UI */
