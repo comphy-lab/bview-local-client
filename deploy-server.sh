@@ -15,6 +15,10 @@
 #   ./deploy-server.sh --fetch          # fetch origin first, deploy origin/main
 #   ./deploy-server.sh --dry-run
 #
+# Environment:
+#   BVIEW_DEPLOY_DIR   deploy target (default ~/.local/share/bview-client)
+#   BVIEW_HEALTH_URL   post-restart health check; set empty to skip
+#
 # Exposure is handled separately and deliberately: the service binds 127.0.0.1
 # only, and is published to the tailnet by
 #   tailscale serve --bg --https=443 --set-path=/ http://127.0.0.1:8000
@@ -32,6 +36,25 @@ DRY_RUN=false
 print_green() { printf "\033[0;32m%s\033[0m\n" "$1"; }
 print_cyan()  { printf "\033[0;36m%s\033[0m\n" "$1"; }
 print_red()   { printf "\033[0;31m%s\033[0m\n" "$1"; }
+print_yellow(){ printf "\033[0;33m%s\033[0m\n" "$1"; }
+
+# systemd reporting the unit as active does not prove the new tree is being
+# served -- the process can be up while the document root is wrong. Poll the
+# editor entry point before discarding the rollback copy. Unset
+# BVIEW_HEALTH_URL to skip the check.
+HEALTH_URL="${BVIEW_HEALTH_URL-http://127.0.0.1:8000/three.js/editor/index.html}"
+deployment_is_serving() {
+    [[ -z "$HEALTH_URL" ]] && return 0
+    command -v curl >/dev/null 2>&1 || return 0
+    local code attempts=10
+    while (( attempts-- > 0 )); do
+        code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 "$HEALTH_URL" 2>/dev/null || echo 000)"
+        [[ "$code" == "200" ]] && return 0
+        sleep 1
+    done
+    print_red "Health check failed: $HEALTH_URL returned $code"
+    return 1
+}
 
 for arg in "$@"; do
     case "$arg" in
@@ -39,8 +62,8 @@ for arg in "$@"; do
         --fetch)   DO_FETCH=true; REF="origin/main" ;;
         --dry-run) DRY_RUN=true ;;
         --help|-h)
-            # Header comment block only; it ends at line 21.
-            sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'
+            # Header comment block only; it ends at line 25.
+            sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//'
             exit 0
             ;;
         *)
@@ -60,8 +83,12 @@ if [[ ! -d .git ]]; then
 fi
 
 if [[ "$DO_FETCH" == true ]]; then
-    print_cyan "Fetching origin..."
-    git fetch --quiet origin
+    if [[ "$DRY_RUN" == true ]]; then
+        print_cyan "Dry run: skipping fetch (would fetch origin)."
+    else
+        print_cyan "Fetching origin..."
+        git fetch --quiet origin
+    fi
 fi
 
 if ! COMMIT=$(git rev-parse --verify --quiet "${REF}^{commit}"); then
@@ -95,6 +122,21 @@ fi
 # served: the running server keeps using the old directory until the rename.
 STAGING="${DEPLOY_DIR}.new"
 PREVIOUS="${DEPLOY_DIR}.old"
+LOCKFILE="${DEPLOY_DIR}.lock"
+
+# $STAGING and $PREVIOUS are fixed paths, so two concurrent deployments would
+# move and delete each other's trees and destroy the rollback copy. Hold an
+# exclusive lock for the rest of the run.
+if command -v flock >/dev/null 2>&1; then
+    mkdir -p "$(dirname "$LOCKFILE")"
+    exec 9>"$LOCKFILE"
+    if ! flock -n 9; then
+        print_red "Error: another deployment is in progress (lock: $LOCKFILE)."
+        exit 1
+    fi
+else
+    print_yellow "Warning: flock unavailable; concurrent deployments are not prevented."
+fi
 
 cleanup_staging() { rm -rf "$STAGING"; }
 trap cleanup_staging EXIT
@@ -134,13 +176,17 @@ trap - EXIT
 if systemctl --user list-unit-files "$UNIT" >/dev/null 2>&1 && \
    systemctl --user is-enabled "$UNIT" >/dev/null 2>&1; then
     print_cyan "Restarting $UNIT..."
-    systemctl --user restart "$UNIT"
+    # Guarded: under `set -e` a failed restart would exit here and the
+    # rollback advice below would never be printed.
+    restart_rc=0
+    systemctl --user restart "$UNIT" || restart_rc=$?
     sleep 1
-    if systemctl --user is-active --quiet "$UNIT"; then
-        print_green "Service is active."
+    if [[ $restart_rc -eq 0 ]] && systemctl --user is-active --quiet "$UNIT" \
+       && deployment_is_serving; then
+        print_green "Service is active and serving the new tree."
     else
-        print_red "Warning: $UNIT is not active after restart."
-        systemctl --user status "$UNIT" --no-pager | head -12
+        print_red "Warning: $UNIT did not come up healthy after restart."
+        systemctl --user status "$UNIT" --no-pager 2>&1 | head -12 || true
         if [[ -d "$PREVIOUS" ]]; then
             print_red "Previous tree retained at $PREVIOUS"
             print_red "Roll back with:"
