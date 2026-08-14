@@ -1,0 +1,29 @@
+[Unit]
+# Template: @DEPLOY_DIR@ is substituted at install time.
+# Installation instructions are in docs/server-deployment.md -- deliberately
+# not repeated here, since substituting this file would rewrite them too.
+Description=Basilisk View local client - static file server (loopback only)
+Documentation=https://github.com/comphy-lab/bview-local-client
+After=network.target
+
+[Service]
+Type=simple
+# Loopback only, deliberately. This server has no authentication and is not
+# meant to face a network directly; publish it with a reverse proxy or a
+# private overlay network instead. See docs/server-deployment.md.
+ExecStart=/usr/bin/python3 -m http.server 8000 \
+  --bind 127.0.0.1 \
+  --directory @DEPLOY_DIR@
+Restart=on-failure
+RestartSec=3
+
+# The tree is static and read-only at runtime.
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+NoNewPrivileges=true
+RestrictAddressFamilies=AF_INET AF_INET6
+MemoryMax=512M
+
+[Install]
+WantedBy=default.target

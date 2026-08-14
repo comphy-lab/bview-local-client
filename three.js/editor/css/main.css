@@ -7,6 +7,10 @@
 	--ui-text: #e0e0e0;
 	--ui-text-muted: #c2c2c2;
 	--ui-text-inactive: #bcbcbc;
+	--ui-input-bg: #2b2b2b;
+	--ui-focus: #4a90d9;
+	--ui-number: #6cb6ff;
+	--ui-selected-bg: #265a96;
 }
 
 body {
@@ -254,8 +258,8 @@ textarea, input { outline: none; } /* osx */
 /*  */
 
 button {
-	color: #555;
-	background-color: #ddd;
+	color: var(--ui-text);
+	background-color: var(--ui-bg-alt);
 	border: 0px;
 	margin: 0px; /* GNOME Web */
 	padding: 5px 8px;
@@ -265,28 +269,58 @@ button {
 }
 
 	button:hover {
-		background-color: #fff;
+		background-color: var(--ui-border);
+		color: var(--ui-text);
+	}
+
+	button:focus-visible, select:focus-visible {
+		/* Both rules below clear the native outline, so focus needs restoring
+		   explicitly or these controls become unreachable by keyboard. */
+		outline: 2px solid var(--ui-focus);
+		outline-offset: -1px;
 	}
 
 	button.selected {
-		background-color: #fff;
+		background-color: var(--ui-selected-bg);
+		color: #fff;
 	}
 
 input, textarea {
-	border: 1px solid transparent;
-	color: #444;
+	border: 1px solid var(--ui-border);
+	color: var(--ui-text);
+	background-color: var(--ui-input-bg);
 }
 
+	input::placeholder, textarea::placeholder {
+		color: var(--ui-text-muted);
+		opacity: 1;			/* Firefox dims placeholders by default */
+	}
+
+	input:disabled, input[readonly], textarea:disabled, textarea[readonly] {
+		/* Readonly fields still have to be legible: `c`, `Name` and `UUID`
+		   are read-only and were rendering near-invisibly. */
+		color: var(--ui-text-muted);
+		background-color: var(--ui-bg);
+	}
+
+	input:focus, textarea:focus {
+		/* input.Number sets border: 0, so the border alone cannot carry focus.
+		   Inset so the ring never overlaps a neighbouring row in this panel. */
+		border-color: var(--ui-focus);
+		outline: 2px solid var(--ui-focus);
+		outline-offset: -1px;
+	}
+
 input.Number {
-	color: #08f!important;
+	color: var(--ui-number)!important;
 	font-size: 12px;
 	border: 0px;
 	padding: 2px;
 }
 
 select {
-	color: #666;
-	background-color: #ddd;
+	color: var(--ui-text);
+	background-color: var(--ui-bg-alt);
 	border: 0px;
 	text-transform: uppercase;
 	cursor: pointer;
@@ -294,7 +328,7 @@ select {
 }
 
 	select:hover {
-		background-color: #fff;
+		background-color: var(--ui-border);
 	}
 
 /* UI */
