@@ -41,12 +41,17 @@ Then install the unit:
 
 ```bash
 mkdir -p ~/.config/systemd/user
-sed "s|@DEPLOY_DIR@|$HOME/.local/share/bview-client|" \
+# Same directory the deployment used, so the unit cannot serve a different tree.
+DEPLOY_DIR="${BVIEW_DEPLOY_DIR:-$HOME/.local/share/bview-client}"
+sed "s|@DEPLOY_DIR@|$DEPLOY_DIR|" \
     deploy/bview-client.service > ~/.config/systemd/user/bview-client.service
 systemctl --user daemon-reload
 systemctl --user enable --now bview-client.service
 sudo loginctl enable-linger "$USER"     # so it starts at boot without a login
 ```
+
+If you set `BVIEW_DEPLOY_DIR`, set it for the unit rendering too — otherwise the
+service serves the default path while `deploy-server.sh` writes somewhere else.
 
 `deploy-server.sh` restarts the unit and verifies the new tree is actually being
 served — by fetching `.deployed-ref` and checking it matches the deployed commit
