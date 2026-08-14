@@ -152,14 +152,17 @@ if ! mkdir "$LOCKDIR" 2>/dev/null; then
     holder="$(cat "$LOCKDIR/pid" 2>/dev/null || true)"
     if [[ -n "$holder" ]] && kill -0 "$holder" 2>/dev/null; then
         print_red "Error: deployment already in progress (pid $holder, lock $LOCKDIR)."
-        exit 1
+    else
+        # Deliberately not reclaimed automatically. Two invocations that both
+        # judged the lock stale would each remove it and could delete the
+        # other's freshly created lock, which is the exact race the lock
+        # exists to prevent. A stale lock only survives SIGKILL or a reboot
+        # mid-deploy, so it is rare and worth a human look.
+        print_red "Error: stale lock at $LOCKDIR (holder pid ${holder:-unknown} is gone)."
+        print_red "No deployment is running. Confirm that, then remove it:"
+        print_red "  rm -rf '$LOCKDIR'"
     fi
-    print_yellow "Stale lock from pid ${holder:-unknown}; taking over."
-    rm -rf "$LOCKDIR"
-    if ! mkdir "$LOCKDIR" 2>/dev/null; then
-        print_red "Error: could not acquire $LOCKDIR."
-        exit 1
-    fi
+    exit 1
 fi
 echo "$$" > "$LOCKDIR/pid"
 release_lock() { rm -rf "$LOCKDIR"; }
