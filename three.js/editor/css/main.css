@@ -293,8 +293,11 @@ input, textarea {
 	}
 
 	input:focus, textarea:focus {
+		/* input.Number sets border: 0, so the border alone cannot carry focus.
+		   Inset so the ring never overlaps a neighbouring row in this panel. */
 		border-color: var(--ui-focus);
-		outline: none;
+		outline: 2px solid var(--ui-focus);
+		outline-offset: -1px;
 	}
 
 input.Number {
