@@ -64,9 +64,8 @@ The unit binds `127.0.0.1` only. That is deliberate and should stay that way:
 the server has no authentication, and neither does the WebSocket protocol on the
 other side.
 
-**Same machine.** Nothing further to do. Open
-`http://localhost:8000/three.js/editor/index.html` and append the `?ws://...`
-suffix your solver prints.
+**Same machine.** Open the loopback client URL and click **Connect to solver**.
+Enter only the trusted WebSocket address, not the entire editor URL.
 
 **Your own devices, over a private overlay network.** A WireGuard-style overlay
 with per-device identity is the least effort for the most safety. Publish the
@@ -97,8 +96,9 @@ both. See the security note below.
 
 Stock `bview2D`/`bview3D` have the upstream client URL compiled in. Two options:
 
-1. Ignore the printed host and paste the `?ws://...` suffix onto your own client
-   URL by hand.
+1. Open your trusted client, click **Connect to solver**, and enter the address
+   directly. For a remote solver use an authenticated tunnel to loopback or a
+   trusted private wss:// address.
 2. Build Basilisk with the `--comphy-bview` flag from
    [comphy-lab/basilisk-C](https://github.com/comphy-lab/basilisk-C), which adds
    `bview-comphy2D` and `bview-comphy3D`. These bind loopback by default and

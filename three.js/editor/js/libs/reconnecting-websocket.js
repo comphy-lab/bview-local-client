@@ -143,7 +143,7 @@ function ReconnectingWebSocket(url, protocols, options) {
          * Can be one of: WebSocket.CONNECTING, WebSocket.OPEN, WebSocket.CLOSING, WebSocket.CLOSED
          * Read only.
          */
-        this.readyState = WebSocket.CONNECTING;
+        this.readyState = WebSocket.CLOSED;
 
         /**
          * A string indicating the name of the sub-protocol the server selected; this will be one of
@@ -192,14 +192,15 @@ function ReconnectingWebSocket(url, protocols, options) {
         };
 
         this.open = function (reconnectAttempt) {
+		if (reconnectAttempt && this.maxReconnectAttempts !== null &&
+			this.reconnectAttempts > this.maxReconnectAttempts) {
+			return;
+		}
 		ws = new WebSocket(self.url, protocols || []);
 		ws.binaryType = this.binaryType;
+		this.readyState = WebSocket.CONNECTING;
 
-		if (reconnectAttempt) {
-			if (this.maxReconnectAttempts && this.reconnectAttempts > this.maxReconnectAttempts) {
-				return;
-			}
-		} else {
+		if (!reconnectAttempt) {
 			eventTarget.dispatchEvent(generateEvent('connecting'));
 			this.reconnectAttempts = 0;
 		}
@@ -235,7 +236,7 @@ function ReconnectingWebSocket(url, protocols, options) {
 		ws.onclose = function(event) {
 			clearTimeout(timeout);
 			ws = null;
-			if (forcedClose) {
+			if (forcedClose || self.maxReconnectAttempts === 0) {
 				self.readyState = WebSocket.CLOSED;
 				eventTarget.dispatchEvent(generateEvent('close'));
 			} else {

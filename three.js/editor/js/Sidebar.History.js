@@ -81,7 +81,7 @@ function SidebarHistory( editor ) {
 				var object = objects[ i ];
 
 				var option = buildOption( object );
-				option.innerHTML = '&nbsp;' + object.name;
+				option.textContent = '\u00a0' + object.name;
 
 				options.push( option );
 
@@ -97,7 +97,7 @@ function SidebarHistory( editor ) {
 				var object = objects[ i ];
 
 				var option = buildOption( object );
-				option.innerHTML = '&nbsp;' + object.name;
+				option.textContent = '\u00a0' + object.name;
 				option.style.opacity = 0.3;
 
 				options.push( option );

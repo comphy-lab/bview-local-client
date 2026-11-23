@@ -9,6 +9,7 @@
 		<link rel="shortcut icon" href="../files/favicon.ico" />
 	</head>
 	<body>
+		<button id="connect-solver" type="button" style="position: absolute; right: 12px; bottom: 36px; z-index: 10">Connect to solver</button>
 		<link rel="stylesheet" href="css/main.css">
 
 		<script src="../examples/js/libs/draco/draco_encoder.js"></script>
@@ -67,10 +68,31 @@
 
 			//
 
-			var location = window.location;
-			var rx = new RegExp( '[?](.*)$' ), url = location.search.match( rx );
+			var editor = new Editor();
 
-			var editor = new Editor( url ? url[1] : undefined );
+			const connect = document.getElementById( 'connect-solver' );
+			connect.addEventListener( 'click', function () {
+
+				const raw = window.prompt( 'Enter the address of your trusted solver:', 'ws://localhost:7100' );
+				if ( raw === null ) return;
+
+				let url;
+				try {
+					url = new URL( raw );
+					const loopback = [ 'localhost', '127.0.0.1', '[::1]' ].includes( url.hostname );
+					if ( ( url.protocol !== 'wss:' && !( loopback && url.protocol === 'ws:' ) ) ||
+						url.username || url.password || url.hash ) throw new Error();
+				} catch ( error ) {
+					window.alert( 'Use a loopback ws:// address or a trusted wss:// address.' );
+					return;
+				}
+
+				const socket = editor.client.socket;
+				if ( socket.readyState === WebSocket.CONNECTING || socket.readyState === WebSocket.OPEN ) return;
+				socket.url = url.href;
+				socket.open();
+
+			} );
 
 			window.editor = editor; // Expose editor to Console
 			window.THREE = THREE; // Expose THREE to APP Scripts and Console
@@ -103,7 +125,6 @@
 
 				editor.storage.get( function ( state ) {
 
-					if ( isLoadingFromHash ) return;
 
 					if ( state !== undefined ) {
 
@@ -164,7 +185,6 @@
 				signals.scriptChanged.add( saveState );
 				signals.historyChanged.add( saveState );
 			
-			        editor.client.socket.open();			
 
 			} );
 
@@ -209,43 +229,6 @@
 
 			//
 
-			var isLoadingFromHash = false;
-			var hash = window.location.hash;
-
-			if ( hash.substr( 1, 5 ) === 'file=' ) {
-
-				var file = hash.substr( 6 );
-
-				if ( confirm( 'Any unsaved data will be lost. Are you sure?' ) ) {
-
-					var loader = new THREE.FileLoader();
-					loader.crossOrigin = '';
-					loader.load( file, function ( text ) {
-
-						editor.clear();
-						editor.fromJSON( JSON.parse( text ) );
-
-					} );
-
-					isLoadingFromHash = true;
-
-				}
-
-			}
-
-			// ServiceWorker
-
-			if ( 'serviceWorker' in navigator ) {
-
-				try {
-
-					navigator.serviceWorker.register( 'sw.js' );
-
-				} catch ( error ) {
-
-				}
-
-			}
 
 		</script>
 	</body>
