@@ -114,6 +114,12 @@ echo ""
 echo "Press Ctrl+C to stop the server."
 echo ""
 
-# Start Python HTTP server from repo root
-cd "$SCRIPT_DIR"
-python3 -m http.server "$PORT"
+# Serve committed client assets, never the working tree.
+export_dir="$(mktemp -d)"
+trap 'rm -rf -- "$export_dir"' EXIT
+git -C "$SCRIPT_DIR" archive HEAD three.js | tar -xf - -C "$export_dir"
+if [[ -n "$(find "$export_dir" -type l -print -quit)" ]]; then
+    echo "Refusing to serve a static export containing symbolic links." >&2
+    exit 1
+fi
+python3 -m http.server --bind 127.0.0.1 --directory "$export_dir" "$PORT"
